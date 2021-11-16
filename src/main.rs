@@ -1,6 +1,11 @@
 #[macro_use]
 extern crate rocket;
 
+extern crate serde;
+
+use serde::{Deserialize, Serialize};
+use std::fs;
+
 #[derive(FromFormField)]
 enum Lang {
     #[field(value = "en")]
@@ -51,12 +56,25 @@ fn hello(lang: Option<Lang>, opt: Options<'_>) -> String {
 }
 
 #[get("/list")]
-fn list()-> &'static str {
+fn list() -> &'static str {
     "Hello, world!"
 }
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build()
-        .mount("/", routes![hello,list])
+
+    let file_path =  std::path::Path::new("settings.json");
+
+
+
+    if !file_path.exists() {
+        let res = fs::write(file_path, "{}");
+        println!("{}",res.is_err())
+    }else{
+        let res = fs::read(file_path);
+        println!("{}",res.is_err())
+
+    }
+
+    rocket::build().mount("/", routes![hello, list])
 }
