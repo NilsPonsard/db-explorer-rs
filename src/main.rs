@@ -2,6 +2,7 @@
 extern crate rocket;
 
 extern crate serde;
+extern crate serde_json;
 
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -60,20 +61,34 @@ fn list() -> &'static str {
     "Hello, world!"
 }
 
+#[derive(Serialize, Deserialize)]
+struct Settings {
+    ah: String,
+    error: bool,
+}
+
 #[launch]
 fn rocket() -> _ {
-
-    let file_path =  std::path::Path::new("settings.json");
-
-
+    let file_path = std::path::Path::new("settings.json");
 
     if !file_path.exists() {
         let res = fs::write(file_path, "{}");
-        println!("{}",res.is_err())
-    }else{
-        let res = fs::read(file_path);
-        println!("{}",res.is_err())
+        println!("{}", res.is_err())
+    } else {
+        let res = fs::read_to_string(file_path);
 
+        if res.is_err() {
+            println!("Error reading the file : {}", res.unwrap_err());
+        } else {
+            let content = res.unwrap();
+
+            let res: Settings = serde_json::from_str(&content).unwrap_or(Settings {
+                ah: "".to_string(),
+                error: true,
+            });
+
+            println!("{} {}",res.error,res.ah)
+        }
     }
 
     rocket::build().mount("/", routes![hello, list])
