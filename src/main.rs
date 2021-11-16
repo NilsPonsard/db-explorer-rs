@@ -6,6 +6,8 @@ extern crate serde_json;
 
 use serde::{Deserialize, Serialize};
 use std::fs;
+use rocket::State;
+
 
 #[derive(FromFormField)]
 enum Lang {
@@ -57,8 +59,11 @@ fn hello(lang: Option<Lang>, opt: Options<'_>) -> String {
 }
 
 #[get("/list")]
-fn list() -> &'static str {
-    "Hello, world!"
+fn list(settings: &State<Settings>) -> String {
+    let mut out :String = String::new();
+    out.push_str(&settings.ah);
+
+    out
 }
 
 #[derive(Serialize, Deserialize)]
@@ -70,7 +75,10 @@ struct Settings {
 #[launch]
 fn rocket() -> _ {
     let file_path = std::path::Path::new("settings.json");
-
+    let mut settings: Settings = Settings {
+        ah: "".to_string(),
+        error: true,
+    };
     if !file_path.exists() {
         let res = fs::write(file_path, "{}");
         println!("{}", res.is_err())
@@ -82,14 +90,14 @@ fn rocket() -> _ {
         } else {
             let content = res.unwrap();
 
-            let res: Settings = serde_json::from_str(&content).unwrap_or(Settings {
+            settings = serde_json::from_str(&content).unwrap_or(Settings {
                 ah: "".to_string(),
                 error: true,
             });
 
-            println!("{} {}",res.error,res.ah)
+            println!("{} {}", settings.error, settings.ah)
         }
     }
 
-    rocket::build().mount("/", routes![hello, list])
+    rocket::build().manage(settings).mount("/", routes![hello, list])
 }
