@@ -1,6 +1,5 @@
-#[macro_use] extern crate rocket;
-
-#[cfg(test)] mod tests;
+#[macro_use]
+extern crate rocket;
 
 #[derive(FromFormField)]
 enum Lang {
@@ -8,34 +7,13 @@ enum Lang {
     English,
     #[field(value = "ru")]
     #[field(value = "ру")]
-    Russian
+    Russian,
 }
 
 #[derive(FromForm)]
 struct Options<'r> {
     emoji: bool,
     name: Option<&'r str>,
-}
-
-// Try visiting:
-//   http://127.0.0.1:8000/hello/world
-#[get("/world")]
-fn world() -> &'static str {
-    "Hello, world!"
-}
-
-// Try visiting:
-//   http://127.0.0.1:8000/hello/мир
-#[get("/мир")]
-fn mir() -> &'static str {
-    "Привет, мир!"
-}
-
-// Try visiting:
-//   http://127.0.0.1:8000/wave/Rocketeer/100
-#[get("/<name>/<age>")]
-fn wave(name: &str, age: u8) -> String {
-    format!("👋 Hello, {} year old named {}!", age, name)
 }
 
 // Note: without the `..` in `opt..`, we'd need to pass `opt.emoji`, `opt.name`.
@@ -72,10 +50,13 @@ fn hello(lang: Option<Lang>, opt: Options<'_>) -> String {
     greeting
 }
 
+#[get("/list")]
+fn list()-> &'static str {
+    "Hello, world!"
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![hello])
-        .mount("/hello", routes![world, mir])
-        .mount("/wave", routes![wave])
+        .mount("/", routes![hello,list])
 }
