@@ -7,6 +7,8 @@ extern crate serde_json;
 use rocket::State;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use rocket::serde::json::{Json,Value,json};
+
 
 #[derive(FromFormField)]
 enum Lang {
@@ -57,21 +59,13 @@ fn hello(lang: Option<Lang>, opt: Options<'_>) -> String {
     greeting
 }
 
-#[get("/list")]
-fn list(settings: &State<Settings>) -> String {
-    let mut out: String = String::new();
-
-    if settings.error {
-        out.push_str("config error")
-    }else{
-        out.push_str(&settings.ah);
-    }
-
-
-    out
+#[get("/status")]
+fn status(settings: &State<Settings>) -> Value{
+    json!(settings)
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
 struct Settings {
     ah: String,
     error: bool,
@@ -106,5 +100,5 @@ fn rocket() -> _ {
 
     rocket::build()
         .manage(settings)
-        .mount("/", routes![hello, list])
+        .mount("/", routes![hello, status])
 }
